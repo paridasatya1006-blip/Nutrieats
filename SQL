@@ -1,0 +1,156 @@
+
+CREATE TABLE meals_data (
+    meal_id INT PRIMARY KEY,
+    meal_name VARCHAR(100),
+    cuisine VARCHAR(50),
+    meal_type VARCHAR(50),
+    diet_type VARCHAR(50),
+    calories INT,
+    protein_g DECIMAL(5,2),
+    carbs_g DECIMAL(6,2),
+    fat_g DECIMAL(5,2),
+    fiber_g DECIMAL(5,2),
+    sugar_g DECIMAL(5,2),
+    sodium_mg INT,
+    cholesterol_mg INT,
+    serving_size_g INT,
+    cooking_method VARCHAR(50),
+    prep_time_min INT,
+    cook_time_min INT,
+    rating DECIMAL(2,1),
+    is_healthy INT
+);
+select*from meals_data;
+
+--Basic Queries--
+
+-- 1. Count total meals in the dataset
+SELECT COUNT(*) AS total_meals FROM meals_data;
+
+-- 2. List unique cuisines available
+SELECT DISTINCT cuisine FROM meals_data;
+
+-- 3. Average calories per cuisine
+SELECT cuisine, ROUND(AVG(calories),2) AS avg_calories
+FROM meals_data
+GROUP BY cuisine
+ORDER BY avg_calories DESC;
+
+-- 4. Meals distribution by diet type
+SELECT diet_type, COUNT(*) AS total_meals
+FROM meals_data
+GROUP BY diet_type
+ORDER BY total_meals DESC;
+
+-- 5. Top 5 highest calorie meals
+SELECT meal_name, cuisine, calories
+FROM meals_data
+ORDER BY calories DESC
+LIMIT 5;
+
+-- 6. Top 5 lowest calorie meals
+SELECT meal_name, cuisine, calories
+FROM meals_data
+ORDER BY calories ASC
+LIMIT 5;
+
+-- 7. Average preparation vs cooking time
+SELECT ROUND(AVG(prep_time_min),2) AS avg_prep_time,
+       ROUND(AVG(cook_time_min),2) AS avg_cook_time
+FROM meals_data;
+
+-- 8. Meals grouped by cooking method
+SELECT cooking_method, COUNT(*) AS total_meals
+FROM meals_data
+GROUP BY cooking_method
+ORDER BY total_meals DESC;
+
+-- 9. Average rating per cuisine
+SELECT cuisine, ROUND(AVG(rating),2) AS avg_rating
+FROM meals_data
+GROUP BY cuisine
+ORDER BY avg_rating DESC;
+
+-- 10. Percentage of meals marked healthy
+SELECT ROUND(100.0 * SUM(is_healthy)::decimal / COUNT(*),2) AS healthy_percentage
+FROM meals_data;
+
+
+-- ADVANCED QUERIES
+
+-- 1. Identify healthiest cuisines (lowest avg calories & highest avg protein)
+SELECT cuisine,
+       ROUND(AVG(calories),1) AS avg_calories,
+       ROUND(AVG(protein_g),1) AS avg_protein,
+       ROUND(AVG(rating),2) AS avg_rating
+FROM meals_data
+WHERE is_healthy = 1
+GROUP BY cuisine
+ORDER BY avg_rating DESC;
+
+-- 2. Find meals that are high protein but low carb (fitness meals)
+SELECT meal_name, cuisine, protein_g, carbs_g, calories
+FROM meals_data
+WHERE protein_g > 40 AND carbs_g < 30
+ORDER BY protein_g DESC;
+
+-- 3. Detect cuisines with longest average cooking time
+SELECT cuisine, ROUND(AVG(cook_time_min),1) AS avg_cooking_time
+FROM meals_data
+GROUP BY cuisine
+ORDER BY avg_cooking_time DESC;
+
+-- 4. Compare healthy vs non-healthy meals in terms of calories
+SELECT is_healthy,
+       ROUND(AVG(calories),1) AS avg_calories,
+       ROUND(AVG(protein_g),1) AS avg_protein,
+       ROUND(AVG(fat_g),1) AS avg_fat
+FROM meals_data
+GROUP BY is_healthy;
+
+-- 5. Find "Hidden Gems" → High rated but low calorie meals
+SELECT meal_name, cuisine, calories, rating
+FROM meals_data
+WHERE calories < 400 AND rating >= 4.5
+ORDER BY rating DESC;
+
+-- 6. Business KPI: Cooking efficiency (prep+cook time per 100 calories)
+SELECT meal_name, cuisine,
+       (prep_time_min + cook_time_min)::decimal / calories * 100 AS efficiency_score
+FROM meals_data
+ORDER BY efficiency_score ASC
+LIMIT 10;
+
+-- 7. Detect cuisines that are most consistent in quality (lowest rating variance)
+SELECT cuisine, ROUND(VAR_POP(rating),3) AS rating_variance
+FROM meals_data
+GROUP BY cuisine
+ORDER BY rating_variance ASC;
+
+-- 8. Create buckets of calorie ranges for menu design
+SELECT CASE
+           WHEN calories < 300 THEN 'Low Calorie'
+           WHEN calories BETWEEN 300 AND 600 THEN 'Medium Calorie'
+           WHEN calories BETWEEN 600 AND 900 THEN 'High Calorie'
+           ELSE 'Very High Calorie'
+       END AS calorie_range,
+       COUNT(*) AS meal_count
+FROM meals_data
+GROUP BY calorie_range
+ORDER BY meal_count DESC;
+
+-- 9. Best cuisine for "fast cooking" (prep+cook < 30 mins)
+SELECT cuisine, COUNT(*) AS quick_meals, ROUND(AVG(rating),2) AS avg_rating
+FROM meals_data
+WHERE (prep_time_min + cook_time_min) <= 30
+GROUP BY cuisine
+ORDER BY quick_meals DESC;
+
+-- 10. Business Recommendation: Top 5 meals to promote (healthy, <500 cal, >4.3 rating)
+SELECT meal_name, cuisine, calories, rating
+FROM meals_data
+WHERE is_healthy = 1
+  AND calories < 500
+  AND rating >= 4.3
+ORDER BY rating DESC
+LIMIT 5;
