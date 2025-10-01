@@ -20,9 +20,10 @@ CREATE TABLE meals_data (
     rating DECIMAL(2,1),
     is_healthy INT
 );
-select*from meals_data;
 
---Basic Queries--
+SELECT * FROM meals_data;
+
+--BASIC QUERIES
 
 -- 1. Count total meals in the dataset
 SELECT COUNT(*) AS total_meals FROM meals_data;
@@ -75,8 +76,8 @@ ORDER BY avg_rating DESC;
 SELECT ROUND(100.0 * SUM(is_healthy)::decimal / COUNT(*),2) AS healthy_percentage
 FROM meals_data;
 
-
--- ADVANCED QUERIES
+---
+-- ADVANCED ANALYTICAL QUERIES
 
 -- 1. Identify healthiest cuisines (lowest avg calories & highest avg protein)
 SELECT cuisine,
@@ -94,7 +95,7 @@ FROM meals_data
 WHERE protein_g > 40 AND carbs_g < 30
 ORDER BY protein_g DESC;
 
--- 3. Detect cuisines with longest average cooking time
+-- 3. Detect cuisines with longest average cooking time (Operational Bottlenecks)
 SELECT cuisine, ROUND(AVG(cook_time_min),1) AS avg_cooking_time
 FROM meals_data
 GROUP BY cuisine
@@ -108,7 +109,7 @@ SELECT is_healthy,
 FROM meals_data
 GROUP BY is_healthy;
 
--- 5. Find "Hidden Gems" → High rated but low calorie meals
+-- 5. Find "Hidden Gems" (High rated but low calorie meals)
 SELECT meal_name, cuisine, calories, rating
 FROM meals_data
 WHERE calories < 400 AND rating >= 4.5
@@ -150,7 +151,7 @@ ORDER BY quick_meals DESC;
 SELECT meal_name, cuisine, calories, rating
 FROM meals_data
 WHERE is_healthy = 1
-  AND calories < 500
-  AND rating >= 4.3
+AND calories < 500
+AND rating >= 4.3
 ORDER BY rating DESC
 LIMIT 5;
